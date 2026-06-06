@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>AV辞典 - APIなし試作版</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --surface-2: #f1f3f8;
+      --text: #151923;
+      --muted: #687085;
+      --line: #e4e7ef;
+      --accent: #111827;
+      --accent-2: #2563eb;
+      --danger: #dc2626;
+      --warn: #b45309;
+      --shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+      --radius: 18px;
+      --bottom-nav: 74px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    img { max-width: 100%; display: block; }
+    .app {
+      max-width: 1120px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 20px 18px calc(var(--bottom-nav) + 24px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(24px, 5vw, 36px);
+      letter-spacing: -0.04em;
+    }
+    .brand .sub {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: var(--muted);
+      font-size: 13px;
+      box-shadow: 0 4px 16px rgba(17, 24, 39, 0.04);
+      white-space: nowrap;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .hero-main {
+      padding: 18px;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .hero-main h2 {
+      margin: 0;
+      font-size: clamp(20px, 4vw, 28px);
+      letter-spacing: -0.03em;
+    }
+    .hero-main p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+    }
+    .stat {
+      background: var(--surface-2);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 82px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .stat strong {
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin: 16px 0;
+    }
+    .searchbox {
+      position: relative;
+    }
+    .searchbox input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 14px 46px 14px 15px;
+      outline: none;
+      box-shadow: 0 4px 16px rgba(17, 24, 39, 0.04);
+    }
+    .searchbox .icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(17, 24, 39, 0.16);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn.secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .btn.danger {
+      background: var(--danger);
+    }
+    .btn.warn {
+      background: var(--warn);
+    }
+    .btn.full { width: 100%; }
+    .small-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .work-card {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+    .thumb {
+      aspect-ratio: 16 / 10;
+      background: linear-gradient(135deg, #e5e7eb, #f8fafc);
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      overflow: hidden;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .work-body {
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+    .code-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .code {
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+    .rating {
+      font-size: 13px;
+      white-space: nowrap;
+      color: #b45309;
+    }
+    .title {
+      font-weight: 900;
+      line-height: 1.45;
+      letter-spacing: -0.02em;
+      word-break: break-word;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+    }
+    .chip {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 12px;
+      color: var(--text);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .chip.clickable { cursor: pointer; }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 44px 18px;
+    }
+    .empty strong {
+      color: var(--text);
+      display: block;
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .form-card { padding: 18px; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label {
+      font-weight: 800;
+      font-size: 13px;
+      color: #303747;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    input, textarea, select {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 13px;
+      padding: 12px 12px;
+      outline: none;
+      width: 100%;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.25);
+    }
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .list-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .list-item {
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .list-item h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .list-item p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .backup-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .backup-box { padding: 16px; }
+    .backup-box h3 { margin: 0 0 8px; }
+    .backup-box p { color: var(--muted); line-height: 1.7; font-size: 14px; margin: 0 0 12px; }
+
+    dialog {
+      border: 0;
+      border-radius: 22px;
+      padding: 0;
+      width: min(680px, calc(100vw - 28px));
+      box-shadow: 0 30px 90px rgba(17, 24, 39, 0.28);
+      overflow: hidden;
+    }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.55); }
+    .modal-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-head h2 { margin: 0; font-size: 18px; }
+    .modal-body { padding: 16px; max-height: min(72vh, 720px); overflow: auto; }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 16px;
+    }
+    .detail-thumb {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      align-self: start;
+    }
+    .kv { display: grid; gap: 10px; }
+    .kv-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+    .kv-row b { color: var(--muted); font-size: 13px; }
+    .modal-actions { display: flex; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(620px, calc(100vw - 22px));
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(17, 24, 39, 0.18);
+      display: none;
+      grid-template-columns: repeat(5, 1fr);
+      padding: 8px;
+      z-index: 10;
+    }
+    .nav-btn {
+      background: transparent;
+      border: 0;
+      border-radius: 15px;
+      padding: 8px 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      display: grid;
+      gap: 3px;
+      place-items: center;
+    }
+    .nav-btn span:first-child { font-size: 17px; line-height: 1; }
+    .nav-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 96px;
+      transform: translateX(-50%) translateY(20px);
+      background: #111827;
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s ease;
+      box-shadow: 0 16px 42px rgba(17, 24, 39, 0.25);
+      z-index: 30;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .works-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .backup-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .app { padding: 16px 12px calc(var(--bottom-nav) + 22px); }
+      .topbar { align-items: flex-start; }
+      .pill { display: none; }
+      .tabs { display: none; }
+      .bottom-nav { display: grid; }
+      .hero-main { padding: 16px; }
+      .stats { grid-template-columns: repeat(3, 1fr); padding: 10px; gap: 8px; }
+      .stat { min-height: 70px; padding: 10px; }
+      .stat strong { font-size: 23px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .works-grid { grid-template-columns: 1fr; gap: 12px; }
+      .work-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); min-height: 0; }
+      .thumb { aspect-ratio: auto; height: 100%; min-height: 150px; border-bottom: 0; border-right: 1px solid var(--line); }
+      .work-body { padding: 12px; min-width: 0; }
+      .title { font-size: 15px; }
+      .chip-row .chip:nth-child(n+5) { display: none; }
+      .form-card { padding: 14px; }
+      .form-grid { grid-template-columns: 1fr; gap: 12px; }
+      .form-actions .btn { flex: 1 1 100%; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .detail-thumb { max-width: 240px; width: 100%; margin: 0 auto; }
+      .kv-row { grid-template-columns: 78px minmax(0, 1fr); }
+      .list-item { align-items: flex-start; flex-direction: column; }
+      .list-item .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>AV辞典</h1>
+        <div class="sub">APIなし試作版 / 端末内ローカル保存</div>
+      </div>
+      <div class="pill" id="saveState">保存済み</div>
+    </header>
+
+    <nav class="tabs" aria-label="メインメニュー">
+      <button class="tab-btn active" data-tab="home">作品</button>
+      <button class="tab-btn" data-tab="add">追加</button>
+      <button class="tab-btn" data-tab="people">人物</button>
+      <button class="tab-btn" data-tab="tags">タグ</button>
+      <button class="tab-btn" data-tab="backup">バックアップ</button>
+    </nav>
+
+    <main>
+      <section id="home" class="panel active">
+        <div class="hero">
+          <div class="card hero-main">
+            <div>
+              <h2>品番・人物・タグで探せる自分用コレクション</h2>
+              <p>公式APIなしで動く初期版です。タイトル・出演者・画像URL・タグなどを手入力し、人物ページやタグページは登録データから自動生成します。</p>
+            </div>
+            <button class="btn" data-open-add>＋ 作品を追加</button>
+          </div>
+          <div class="card stats">
+            <div class="stat"><strong id="statWorks">0</strong><span>作品</span></div>
+            <div class="stat"><strong id="statPeople">0</strong><span>人物</span></div>
+            <div class="stat"><strong id="statTags">0</strong><span>タグ</span></div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="searchbox">
+            <input id="searchInput" type="search" placeholder="品番・タイトル・人物・メーカー・タグで検索" autocomplete="off" />
+            <span class="icon">⌕</span>
+          </div>
+          <button class="btn secondary" id="clearSearch">検索クリア</button>
+        </div>
+
+        <div id="activeFilter" class="hint" style="margin: -4px 0 12px;"></div>
+        <div id="worksGrid" class="works-grid"></div>
+        <div id="emptyWorks" class="card empty" style="display:none;">
+          <strong>まだ作品がありません</strong>
+          まずは「追加」から品番だけでも登録できます。
+        </div>
+      </section>
+
+      <section id="add" class="panel">
+        <div class="card form-card">
+          <h2 style="margin:0 0 6px;">作品を追加・編集</h2>
+          <p class="hint" style="margin:0 0 16px;">所持状況欄は入れていません。品番だけでも保存できます。</p>
+          <form id="workForm">
+            <input type="hidden" id="editId" />
+            <div class="form-grid">
+              <div class="field">
+                <label for="code">品番 *</label>
+                <input id="code" placeholder="例：ABC-001" required />
+              </div>
+              <div class="field">
+                <label for="title">タイトル</label>
+                <input id="title" placeholder="あとから入力でも可" />
+              </div>
+              <div class="field full">
+                <label for="performers">出演者・人物</label>
+                <input id="performers" placeholder="例：出演者A, 出演者B" />
+                <div class="hint">カンマ区切りで複数登録できます。人物ページは自動生成されます。</div>
+              </div>
+              <div class="field">
+                <label for="maker">メーカー</label>
+                <input id="maker" placeholder="メーカー名" />
+              </div>
+              <div class="field">
+                <label for="label">レーベル</label>
+                <input id="label" placeholder="レーベル名" />
+              </div>
+              <div class="field">
+                <label for="series">シリーズ</label>
+                <input id="series" placeholder="シリーズ名" />
+              </div>
+              <div class="field">
+                <label for="releaseDate">発売日</label>
+                <input id="releaseDate" type="date" />
+              </div>
+              <div class="field">
+                <label for="rating">評価</label>
+                <select id="rating">
+                  <option value="">未評価</option>
+                  <option value="1">★</option>
+                  <option value="2">★★</option>
+                  <option value="3">★★★</option>
+                  <option value="4">★★★★</option>
+                  <option value="5">★★★★★</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="tags">タグ</label>
+                <input id="tags" placeholder="例：お気に入り, 単体, FC2, 保存版" />
+                <div class="hint">カンマ区切り。タグページは自動生成されます。</div>
+              </div>
+              <div class="field full">
+                <label for="thumbnailUrl">サムネイル画像URL</label>
+                <input id="thumbnailUrl" placeholder="https://..." />
+              </div>
+              <div class="field full">
+                <label for="thumbnailFile">サムネイル画像アップロード</label>
+                <input id="thumbnailFile" type="file" accept="image/*" />
+                <div class="hint">試作版では画像を端末内に保存します。大きい画像を多く入れるとブラウザ保存容量を使います。</div>
+              </div>
+              <div class="field full">
+                <label for="sourceUrl">参照URL</label>
+                <input id="sourceUrl" placeholder="作品ページなどのURL" />
+              </div>
+              <div class="field full">
+                <label for="memo">メモ</label>
+                <textarea id="memo" placeholder="自由メモ"></textarea>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn" type="submit">保存する</button>
+              <button class="btn secondary" type="button" id="resetForm">入力をクリア</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="people" class="panel">
+        <div class="toolbar">
+          <div>
+            <h2 style="margin:0 0 4px;">人物ページ</h2>
+            <div class="hint">登録済み作品から自動生成されます。</div>
+          </div>
+          <button class="btn secondary" data-open-add>＋ 作品を追加</button>
+        </div>
+        <div id="peopleList" class="list-stack"></div>
+        <div id="emptyPeople" class="card empty" style="display:none;"><strong>人物が未登録です</strong>作品追加時に出演者を入力してください。</div>
+      </section>
+
+      <section id="tags" class="panel">
+        <div class="toolbar">
+          <div>
+            <h2 style="margin:0 0 4px;">タグページ</h2>
+            <div class="hint">タグを押すと作品一覧を絞り込みます。</div>
+          </div>
+          <button class="btn secondary" data-open-add>＋ 作品を追加</button>
+        </div>
+        <div id="tagList" class="list-stack"></div>
+        <div id="emptyTags" class="card empty" style="display:none;"><strong>タグが未登録です</strong>作品追加時にタグを入力してください。</div>
+      </section>
+
+      <section id="backup" class="panel">
+        <div class="backup-grid">
+          <div class="card backup-box">
+            <h3>JSONで書き出し</h3>
+            <p>登録データをバックアップします。別端末に移すときにも使えます。</p>
+            <button class="btn full" id="exportJson">書き出す</button>
+          </div>
+          <div class="card backup-box">
+            <h3>JSONを読み込み</h3>
+            <p>この試作版から書き出したJSONを読み込みます。現在のデータに追加します。</p>
+            <input id="importFile" type="file" accept="application/json,.json" />
+          </div>
+          <div class="card backup-box">
+            <h3>サンプルデータ</h3>
+            <p>動作確認用のサンプルを入れ直します。現在のデータは上書きされます。</p>
+            <button class="btn warn full" id="loadSample">サンプルを入れ直す</button>
+          </div>
+          <div class="card backup-box">
+            <h3>全削除</h3>
+            <p>このブラウザ内の登録データをすべて削除します。</p>
+            <button class="btn danger full" id="deleteAll">すべて削除</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="スマホ用メニュー">
+    <button class="nav-btn active" data-tab="home"><span>⌂</span><span>作品</span></button>
+    <button class="nav-btn" data-tab="add"><span>＋</span><span>追加</span></button>
+    <button class="nav-btn" data-tab="people"><span>👤</span><span>人物</span></button>
+    <button class="nav-btn" data-tab="tags"><span>🏷</span><span>タグ</span></button>
+    <button class="nav-btn" data-tab="backup"><span>⇅</span><span>保存</span></button>
+  </nav>
+
+  <dialog id="detailDialog">
+    <div class="modal-head">
+      <h2 id="detailTitle">作品詳細</h2>
+      <button class="small-btn" id="closeDialog">閉じる</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </dialog>
+
+  <div class="toast" id="toast">保存しました</div>
+
+  <script>
+    const STORAGE_KEY = 'av_dict_no_api_v1';
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+    let works = [];
+    let searchText = '';
+    let activeFilter = null;
+
+    const sampleWorks = [
+      {
+        id: crypto.randomUUID(),
+        code: 'ABC-001',
+        title: 'サンプル作品A',
+        performers: ['出演者A', '出演者B'],
+        maker: 'サンプルメーカー',
+        label: 'サンプルレーベル',
+        series: 'シリーズ1',
+        releaseDate: '2026-01-15',
+        rating: '4',
+        tags: ['お気に入り', '単体', '保存版'],
+        thumbnailUrl: '',
+        thumbnailData: '',
+        sourceUrl: '',
+        memo: 'これは動作確認用のサンプルです。',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: crypto.randomUUID(),
+        code: 'DEF-002',
+        title: 'サンプル作品B',
+        performers: ['出演者C'],
+        maker: '別メーカー',
+        label: '',
+        series: '',
+        releaseDate: '',
+        rating: '3',
+        tags: ['未整理', '企画'],
+        thumbnailUrl: '',
+        thumbnailData: '',
+        sourceUrl: '',
+        memo: '品番だけ登録して後から埋める運用もできます。',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: crypto.randomUUID(),
+        code: 'FC2-PPV-0000000',
+        title: 'サンプル作品C',
+        performers: ['出演者A'],
+        maker: '個人・その他',
+        label: '',
+        series: '',
+        releaseDate: '',
+        rating: '',
+        tags: ['FC2', '要確認'],
+        thumbnailUrl: '',
+        thumbnailData: '',
+        sourceUrl: '',
+        memo: 'FC2なども手入力で同じように管理できます。',
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    function normalizeList(value) {
+      return String(value || '')
+        .split(/[、,]/)
+        .map(v => v.trim())
+        .filter(Boolean)
+        .filter((v, index, arr) => arr.indexOf(v) === index);
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(works));
+      $('#saveState').textContent = '保存済み';
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          works = JSON.parse(raw);
+        } else {
+          works = structuredClone(sampleWorks);
+          save();
+        }
+      } catch (e) {
+        console.error(e);
+        works = [];
+      }
+    }
+
+    function showToast(message) {
+      const toast = $('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    function setTab(tab) {
+      $$('.panel').forEach(p => p.classList.toggle('active', p.id === tab));
+      $$('.tab-btn, .nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+      if (tab === 'home') renderWorks();
+      if (tab === 'people') renderPeople();
+      if (tab === 'tags') renderTags();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getAllPeople() {
+      const map = new Map();
+      works.forEach(work => {
+        (work.performers || []).forEach(name => {
+          map.set(name, (map.get(name) || 0) + 1);
+        });
+      });
+      return Array.from(map.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja'));
+    }
+
+    function getAllTags() {
+      const map = new Map();
+      works.forEach(work => {
+        (work.tags || []).forEach(name => {
+          map.set(name, (map.get(name) || 0) + 1);
+        });
+      });
+      return Array.from(map.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja'));
+    }
+
+    function updateStats() {
+      $('#statWorks').textContent = works.length;
+      $('#statPeople').textContent = getAllPeople().length;
+      $('#statTags').textContent = getAllTags().length;
+    }
+
+    function workHaystack(work) {
+      return [
+        work.code, work.title, work.maker, work.label, work.series,
+        ...(work.performers || []), ...(work.tags || []), work.memo
+      ].join(' ').toLowerCase();
+    }
+
+    function getFilteredWorks() {
+      let result = [...works].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      if (searchText) {
+        const q = searchText.toLowerCase();
+        result = result.filter(work => workHaystack(work).includes(q));
+      }
+      if (activeFilter) {
+        if (activeFilter.type === 'person') result = result.filter(work => (work.performers || []).includes(activeFilter.value));
+        if (activeFilter.type === 'tag') result = result.filter(work => (work.tags || []).includes(activeFilter.value));
+      }
+      return result;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function ratingStars(value) {
+      const count = Number(value || 0);
+      return count ? '★'.repeat(count) : '未評価';
+    }
+
+    function thumbnailHtml(work) {
+      const src = work.thumbnailData || work.thumbnailUrl;
+      if (src) return `<img src="${escapeHtml(src)}" alt="${escapeHtml(work.title || work.code)}">`;
+      return `<span>${escapeHtml(work.code || 'NO IMAGE')}</span>`;
+    }
+
+    function renderWorks() {
+      updateStats();
+      const list = getFilteredWorks();
+      const grid = $('#worksGrid');
+      grid.innerHTML = '';
+      $('#emptyWorks').style.display = list.length ? 'none' : 'block';
+
+      const filterText = [];
+      if (searchText) filterText.push(`検索:「${escapeHtml(searchText)}」`);
+      if (activeFilter) filterText.push(`${activeFilter.type === 'person' ? '人物' : 'タグ'}:「${escapeHtml(activeFilter.value)}」`);
+      $('#activeFilter').innerHTML = filterText.length ? `${filterText.join(' / ')} <button class="small-btn" id="resetFilterInline">絞り込み解除</button>` : '';
+      const resetBtn = $('#resetFilterInline');
+      if (resetBtn) resetBtn.addEventListener('click', () => {
+        searchText = '';
+        activeFilter = null;
+        $('#searchInput').value = '';
+        renderWorks();
+      });
+
+      list.forEach(work => {
+        const el = document.createElement('article');
+        el.className = 'card work-card';
+        el.innerHTML = `
+          <div class="thumb">${thumbnailHtml(work)}</div>
+          <div class="work-body">
+            <div class="code-row">
+              <span class="code">${escapeHtml(work.code)}</span>
+              <span class="rating">${escapeHtml(ratingStars(work.rating))}</span>
+            </div>
+            <div class="title">${escapeHtml(work.title || 'タイトル未入力')}</div>
+            <div class="meta">${escapeHtml((work.performers || []).join(' / ') || '人物未入力')}</div>
+            <div class="meta">${escapeHtml([work.maker, work.series].filter(Boolean).join(' / ') || 'メーカー等未入力')}</div>
+            <div class="chip-row">
+              ${(work.tags || []).slice(0, 6).map(tag => `<span class="chip clickable" data-tag="${escapeHtml(tag)}">#${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            <button class="btn secondary full" data-detail="${work.id}">詳細</button>
+          </div>
+        `;
+        grid.appendChild(el);
+      });
+
+      $$('[data-detail]').forEach(btn => btn.addEventListener('click', () => openDetail(btn.dataset.detail)));
+      $$('[data-tag]').forEach(chip => chip.addEventListener('click', (event) => {
+        event.stopPropagation();
+        activeFilter = { type: 'tag', value: chip.dataset.tag };
+        setTab('home');
+      }));
+    }
+
+    function renderPeople() {
+      updateStats();
+      const list = getAllPeople();
+      const root = $('#peopleList');
+      root.innerHTML = '';
+      $('#emptyPeople').style.display = list.length ? 'none' : 'block';
+      list.forEach(([name, count]) => {
+        const el = document.createElement('div');
+        el.className = 'card list-item';
+        el.innerHTML = `
+          <div><h3>${escapeHtml(name)}</h3><p>${count}作品</p></div>
+          <button class="btn secondary" data-person="${escapeHtml(name)}">この人物の作品を見る</button>
+        `;
+        root.appendChild(el);
+      });
+      $$('[data-person]').forEach(btn => btn.addEventListener('click', () => {
+        activeFilter = { type: 'person', value: btn.dataset.person };
+        searchText = '';
+        $('#searchInput').value = '';
+        setTab('home');
+      }));
+    }
+
+    function renderTags() {
+      updateStats();
+      const list = getAllTags();
+      const root = $('#tagList');
+      root.innerHTML = '';
+      $('#emptyTags').style.display = list.length ? 'none' : 'block';
+      list.forEach(([name, count]) => {
+        const el = document.createElement('div');
+        el.className = 'card list-item';
+        el.innerHTML = `
+          <div><h3>#${escapeHtml(name)}</h3><p>${count}作品</p></div>
+          <button class="btn secondary" data-tag-filter="${escapeHtml(name)}">このタグの作品を見る</button>
+        `;
+        root.appendChild(el);
+      });
+      $$('[data-tag-filter]').forEach(btn => btn.addEventListener('click', () => {
+        activeFilter = { type: 'tag', value: btn.dataset.tagFilter };
+        searchText = '';
+        $('#searchInput').value = '';
+        setTab('home');
+      }));
+    }
+
+    function openDetail(id) {
+      const work = works.find(w => w.id === id);
+      if (!work) return;
+      $('#detailTitle').textContent = work.title || work.code;
+      $('#detailBody').innerHTML = `
+        <div class="detail-grid">
+          <div class="thumb detail-thumb">${thumbnailHtml(work)}</div>
+          <div>
+            <div class="kv">
+              <div class="kv-row"><b>品番</b><span>${escapeHtml(work.code)}</span></div>
+              <div class="kv-row"><b>タイトル</b><span>${escapeHtml(work.title || '未入力')}</span></div>
+              <div class="kv-row"><b>人物</b><span>${(work.performers || []).map(p => `<button class="small-btn" data-detail-person="${escapeHtml(p)}">${escapeHtml(p)}</button>`).join(' ') || '未入力'}</span></div>
+              <div class="kv-row"><b>メーカー</b><span>${escapeHtml(work.maker || '未入力')}</span></div>
+              <div class="kv-row"><b>レーベル</b><span>${escapeHtml(work.label || '未入力')}</span></div>
+              <div class="kv-row"><b>シリーズ</b><span>${escapeHtml(work.series || '未入力')}</span></div>
+              <div class="kv-row"><b>発売日</b><span>${escapeHtml(work.releaseDate || '未入力')}</span></div>
+              <div class="kv-row"><b>評価</b><span>${escapeHtml(ratingStars(work.rating))}</span></div>
+              <div class="kv-row"><b>タグ</b><span>${(work.tags || []).map(t => `<button class="small-btn" data-detail-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`).join(' ') || '未入力'}</span></div>
+              <div class="kv-row"><b>参照URL</b><span>${work.sourceUrl ? `<a href="${escapeHtml(work.sourceUrl)}" target="_blank" rel="noopener">開く</a>` : '未入力'}</span></div>
+              <div class="kv-row"><b>メモ</b><span>${escapeHtml(work.memo || '未入力')}</span></div>
+            </div>
+            <div class="modal-actions">
+              <button class="btn" data-edit="${work.id}">編集</button>
+              <button class="btn danger" data-delete="${work.id}">削除</button>
+            </div>
+          </div>
+        </div>
+      `;
+      $('#detailDialog').showModal();
+
+      $$('[data-edit]', $('#detailBody')).forEach(btn => btn.addEventListener('click', () => {
+        $('#detailDialog').close();
+        editWork(btn.dataset.edit);
+      }));
+      $$('[data-delete]', $('#detailBody')).forEach(btn => btn.addEventListener('click', () => {
+        deleteWork(btn.dataset.delete);
+      }));
+      $$('[data-detail-person]', $('#detailBody')).forEach(btn => btn.addEventListener('click', () => {
+        $('#detailDialog').close();
+        activeFilter = { type: 'person', value: btn.dataset.detailPerson };
+        setTab('home');
+      }));
+      $$('[data-detail-tag]', $('#detailBody')).forEach(btn => btn.addEventListener('click', () => {
+        $('#detailDialog').close();
+        activeFilter = { type: 'tag', value: btn.dataset.detailTag };
+        setTab('home');
+      }));
+    }
+
+    function fillForm(work) {
+      $('#editId').value = work?.id || '';
+      $('#code').value = work?.code || '';
+      $('#title').value = work?.title || '';
+      $('#performers').value = (work?.performers || []).join(', ');
+      $('#maker').value = work?.maker || '';
+      $('#label').value = work?.label || '';
+      $('#series').value = work?.series || '';
+      $('#releaseDate').value = work?.releaseDate || '';
+      $('#rating').value = work?.rating || '';
+      $('#tags').value = (work?.tags || []).join(', ');
+      $('#thumbnailUrl').value = work?.thumbnailUrl || '';
+      $('#sourceUrl').value = work?.sourceUrl || '';
+      $('#memo').value = work?.memo || '';
+      $('#thumbnailFile').value = '';
+    }
+
+    function editWork(id) {
+      const work = works.find(w => w.id === id);
+      if (!work) return;
+      fillForm(work);
+      setTab('add');
+      showToast('編集モードです');
+    }
+
+    function deleteWork(id) {
+      const work = works.find(w => w.id === id);
+      if (!work) return;
+      const ok = confirm(`${work.code} を削除しますか？`);
+      if (!ok) return;
+      works = works.filter(w => w.id !== id);
+      save();
+      $('#detailDialog').close();
+      renderAll();
+      showToast('削除しました');
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve('');
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      const id = $('#editId').value || crypto.randomUUID();
+      const existing = works.find(w => w.id === id);
+      const file = $('#thumbnailFile').files[0];
+      const thumbnailData = file ? await readFileAsDataUrl(file) : (existing?.thumbnailData || '');
+      const record = {
+        id,
+        code: $('#code').value.trim(),
+        title: $('#title').value.trim(),
+        performers: normalizeList($('#performers').value),
+        maker: $('#maker').value.trim(),
+        label: $('#label').value.trim(),
+        series: $('#series').value.trim(),
+        releaseDate: $('#releaseDate').value,
+        rating: $('#rating').value,
+        tags: normalizeList($('#tags').value),
+        thumbnailUrl: $('#thumbnailUrl').value.trim(),
+        thumbnailData,
+        sourceUrl: $('#sourceUrl').value.trim(),
+        memo: $('#memo').value.trim(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      if (!record.code) {
+        showToast('品番を入力してください');
+        return;
+      }
+      const index = works.findIndex(w => w.id === id);
+      if (index >= 0) works[index] = record;
+      else works.unshift(record);
+      save();
+      fillForm(null);
+      renderAll();
+      setTab('home');
+      showToast('保存しました');
+    }
+
+    function renderAll() {
+      updateStats();
+      renderWorks();
+      renderPeople();
+      renderTags();
+    }
+
+    function exportJson() {
+      const data = JSON.stringify({ app: 'AV辞典 APIなし試作版', exportedAt: new Date().toISOString(), works }, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `av-dict-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('書き出しました');
+    }
+
+    async function importJson(file) {
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const importedWorks = Array.isArray(parsed) ? parsed : parsed.works;
+        if (!Array.isArray(importedWorks)) throw new Error('works not found');
+        const normalized = importedWorks.map(w => ({
+          id: w.id || crypto.randomUUID(),
+          code: String(w.code || '').trim(),
+          title: String(w.title || '').trim(),
+          performers: Array.isArray(w.performers) ? w.performers : normalizeList(w.performers),
+          maker: String(w.maker || '').trim(),
+          label: String(w.label || '').trim(),
+          series: String(w.series || '').trim(),
+          releaseDate: w.releaseDate || '',
+          rating: w.rating || '',
+          tags: Array.isArray(w.tags) ? w.tags : normalizeList(w.tags),
+          thumbnailUrl: w.thumbnailUrl || '',
+          thumbnailData: w.thumbnailData || '',
+          sourceUrl: w.sourceUrl || '',
+          memo: w.memo || '',
+          createdAt: w.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        })).filter(w => w.code);
+        const existingCodes = new Set(works.map(w => w.code));
+        const toAdd = normalized.filter(w => !existingCodes.has(w.code));
+        works = [...toAdd, ...works];
+        save();
+        renderAll();
+        showToast(`${toAdd.length}件読み込みました`);
+      } catch (e) {
+        console.error(e);
+        alert('JSONを読み込めませんでした。');
+      } finally {
+        $('#importFile').value = '';
+      }
+    }
+
+    function bindEvents() {
+      $$('.tab-btn, .nav-btn').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+      $$('[data-open-add]').forEach(btn => btn.addEventListener('click', () => {
+        fillForm(null);
+        setTab('add');
+      }));
+      $('#searchInput').addEventListener('input', (e) => {
+        searchText = e.target.value.trim();
+        renderWorks();
+      });
+      $('#clearSearch').addEventListener('click', () => {
+        searchText = '';
+        activeFilter = null;
+        $('#searchInput').value = '';
+        renderWorks();
+      });
+      $('#workForm').addEventListener('submit', handleSubmit);
+      $('#resetForm').addEventListener('click', () => fillForm(null));
+      $('#closeDialog').addEventListener('click', () => $('#detailDialog').close());
+      $('#exportJson').addEventListener('click', exportJson);
+      $('#importFile').addEventListener('change', e => importJson(e.target.files[0]));
+      $('#loadSample').addEventListener('click', () => {
+        if (!confirm('サンプルデータで上書きしますか？')) return;
+        works = structuredClone(sampleWorks).map(w => ({ ...w, id: crypto.randomUUID(), createdAt: new Date().toISOString() }));
+        save();
+        renderAll();
+        showToast('サンプルを入れ直しました');
+      });
+      $('#deleteAll').addEventListener('click', () => {
+        if (!confirm('すべてのデータを削除しますか？')) return;
+        works = [];
+        save();
+        renderAll();
+        showToast('全削除しました');
+      });
+    }
+
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      navigator.serviceWorker.register('./sw.js').catch(console.warn);
+    }
+
+    load();
+    bindEvents();
+    renderAll();
+  </script>
+</body>
+</html>
