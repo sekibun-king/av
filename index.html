@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#141827" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>AV辞典</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="ageGate" class="age-gate" hidden>
+    <div class="age-card" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
+      <div class="app-mark">AV辞典</div>
+      <h1 id="ageTitle">18歳以上確認</h1>
+      <p>
+        このページは成人向け作品の個人管理を目的としています。18歳未満の方は利用できません。
+      </p>
+      <div class="age-actions">
+        <button id="confirmAgeBtn" class="primary large">18歳以上です</button>
+        <a class="ghost large" href="https://www.google.com/">退出する</a>
+      </div>
+      <button id="openPrivacyFromGate" class="link-button" type="button">プライバシーポリシーを見る</button>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">Private local catalog</p>
+      <h1>AV辞典</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportBtn" class="secondary" type="button">書き出し</button>
+      <label class="secondary file-label">
+        読み込み
+        <input id="importInput" type="file" accept="application/json" />
+      </label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel search-panel" aria-labelledby="searchTitle">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Search</p>
+          <h2 id="searchTitle">検索</h2>
+        </div>
+        <button id="clearSearchBtn" class="ghost" type="button">条件クリア</button>
+      </div>
+
+      <form id="codeSearchForm" class="search-box">
+        <label for="codeSearch">品番検索フォーム</label>
+        <div class="input-row">
+          <input id="codeSearch" name="codeSearch" inputmode="search" autocomplete="off" placeholder="例：ABCD-123" />
+          <button class="primary" type="submit">検索</button>
+        </div>
+        <div class="external-actions" aria-label="品番の外部検索">
+          <button class="secondary external-search" type="button" data-kind="code" data-site="fanza">FANZAで検索</button>
+          <button class="secondary external-search" type="button" data-kind="code" data-site="google">Googleで検索</button>
+          <button class="secondary external-search" type="button" data-kind="code" data-site="x">Xで検索</button>
+        </div>
+      </form>
+
+      <form id="actressSearchForm" class="search-box">
+        <label for="actressSearch">女優名検索フォーム</label>
+        <div class="input-row">
+          <input id="actressSearch" name="actressSearch" inputmode="search" autocomplete="off" placeholder="例：女優名" />
+          <button class="primary" type="submit">検索</button>
+        </div>
+        <div class="external-actions" aria-label="女優名の外部検索">
+          <button class="secondary external-search" type="button" data-kind="actress" data-site="fanza">FANZAで検索</button>
+          <button class="secondary external-search" type="button" data-kind="actress" data-site="google">Googleで検索</button>
+          <button class="secondary external-search" type="button" data-kind="actress" data-site="x">Xで検索</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel form-panel" aria-labelledby="manualTitle">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Add manually</p>
+          <h2 id="manualTitle">手入力登録</h2>
+        </div>
+      </div>
+
+      <form id="manualForm" class="manual-form">
+        <div class="field-grid">
+          <label>
+            <span>品番</span>
+            <input id="itemCode" autocomplete="off" placeholder="ABCD-123" required />
+          </label>
+          <label>
+            <span>タイトル</span>
+            <input id="itemTitle" autocomplete="off" placeholder="作品タイトル" />
+          </label>
+          <label>
+            <span>女優名</span>
+            <input id="itemActresses" autocomplete="off" placeholder="複数ならカンマ区切り" />
+          </label>
+          <label>
+            <span>作品URL</span>
+            <input id="itemUrl" type="url" autocomplete="off" placeholder="https://..." />
+          </label>
+          <label class="wide">
+            <span>サムネURL</span>
+            <input id="itemThumb" type="url" autocomplete="off" placeholder="https://...jpg / ...webp" />
+          </label>
+          <label class="wide">
+            <span>メモ</span>
+            <textarea id="itemMemo" rows="4" placeholder="購入予定、感想、シリーズ名など"></textarea>
+          </label>
+        </div>
+
+        <div class="check-row">
+          <label><input id="itemFavorite" type="checkbox" /> お気に入り</label>
+          <label><input id="itemWatched" type="checkbox" /> 視聴済み</label>
+        </div>
+
+        <div class="form-actions">
+          <button id="saveBtn" class="primary large" type="submit">登録する</button>
+          <button id="resetFormBtn" class="ghost large" type="button">入力リセット</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel collection-panel" aria-labelledby="collectionTitle">
+      <div class="panel-head sticky-head">
+        <div>
+          <p class="eyebrow">Collection</p>
+          <h2 id="collectionTitle">登録作品</h2>
+        </div>
+        <div class="filters" role="group" aria-label="表示フィルター">
+          <button class="filter active" type="button" data-filter="all">全部</button>
+          <button class="filter" type="button" data-filter="favorite">お気に入り</button>
+          <button class="filter" type="button" data-filter="watched">視聴済み</button>
+          <button class="filter" type="button" data-filter="unwatched">未視聴</button>
+        </div>
+      </div>
+      <div id="resultInfo" class="result-info"></div>
+      <div id="cards" class="cards" aria-live="polite"></div>
+      <div id="emptyState" class="empty-state" hidden>
+        <div class="empty-icon">＋</div>
+        <h3>まだ登録がありません</h3>
+        <p>品番や女優名で外部検索し、必要な情報を手入力で登録してください。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <button id="openPrivacyBtn" class="link-button" type="button">プライバシーポリシー</button>
+    <span>データはこの端末のブラウザ内に保存されます。</span>
+  </footer>
+
+  <dialog id="privacyDialog" class="privacy-dialog">
+    <div class="dialog-head">
+      <h2>プライバシーポリシー</h2>
+      <button id="closePrivacyBtn" class="icon-button" type="button" aria-label="閉じる">×</button>
+    </div>
+    <div class="dialog-body">
+      <p>
+        AV辞典は、成人向け作品を個人で管理するためのローカルWebアプリです。
+      </p>
+      <h3>保存する情報</h3>
+      <p>
+        手入力した品番、タイトル、女優名、サムネURL、作品URL、お気に入り、視聴済み、メモを、利用中のブラウザの localStorage に保存します。
+      </p>
+      <h3>外部送信</h3>
+      <p>
+        このアプリ自体はサーバーへデータを送信しません。ただし、外部検索ボタンを押すと、検索語がFANZA、Google、Xなどの外部サイトに渡されます。外部サイト上での取り扱いは各サイトの規約・プライバシーポリシーに従います。
+      </p>
+      <h3>注意事項</h3>
+      <p>
+        端末の共有、ブラウザの同期、バックアップファイルの管理には注意してください。共用端末での利用は推奨しません。
+      </p>
+      <h3>データ削除</h3>
+      <p>
+        各作品カードの削除ボタンから個別削除できます。ブラウザのサイトデータを削除すると、このアプリ内の保存データも削除されます。
+      </p>
+    </div>
+  </dialog>
+
+  <template id="cardTemplate">
+    <article class="work-card">
+      <div class="thumb-wrap">
+        <img class="thumb" alt="" loading="lazy" />
+        <div class="thumb-placeholder">NO IMAGE</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div>
+            <p class="code"></p>
+            <h3 class="title"></h3>
+          </div>
+          <div class="status-badges"></div>
+        </div>
+        <p class="actresses"></p>
+        <p class="memo"></p>
+        <div class="card-actions">
+          <button class="toggle-fav" type="button">☆ お気に入り</button>
+          <button class="toggle-watched" type="button">未視聴</button>
+          <a class="open-url" target="_blank" rel="noopener noreferrer">作品URL</a>
+          <button class="edit-item" type="button">編集</button>
+          <button class="delete-item danger" type="button">削除</button>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
